@@ -1,2 +1,2 @@
 # DBMS-Mini-Project
-g20 Event Management System
+## G20 Event Management System
