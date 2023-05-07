@@ -1,3 +1,1356 @@
 /* Contains JDBC Connectivity */
 /* Also contains Java Swing as front end */
 /* Output of the queries being displayed on the GUI windows*/
+
+
+
+
+package swing;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.sql.Connection;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.*;
+import javax.imageio.ImageIO;
+
+
+// class to display the login page
+class LoginFrame extends JFrame implements ActionListener 
+{
+	private JTextField usernameField;
+	private JPasswordField passwordField;
+	private JButton loginButton;
+
+	public LoginFrame() {
+		setTitle("Login");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(300, 150);
+		setLocationRelativeTo(null);
+		setResizable(false);
+
+		JPanel panel = new JPanel(new GridLayout(3, 2));
+
+		JLabel usernameLabel = new JLabel("Username : ");
+		JLabel passwordLabel = new JLabel("Password : ");
+
+		usernameField = new JTextField();
+		passwordField = new JPasswordField();
+
+		loginButton = new JButton("Login");
+		loginButton.addActionListener(this);
+
+		panel.add(usernameLabel);
+		panel.add(usernameField);
+		panel.add(passwordLabel);
+		panel.add(passwordField);
+		panel.add(new JLabel());
+		panel.add(loginButton);
+
+		add(panel);
+
+		setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String username = usernameField.getText();
+		String password = new String(passwordField.getPassword());
+
+		if (username.equals("admin") && password.equals("root123")) {
+			dispose();
+			new DBMSProject();
+		} else {
+			JOptionPane.showMessageDialog(null, "Invalid login credentials.");
+		}
+	}
+}
+
+
+
+public class DBMSProject extends JFrame implements ActionListener 
+{
+
+	private JComboBox<String> dropdown;
+	private JButton executeBtn;
+
+	// Database credentials
+	static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+	static final String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+	static final String USER = "user";
+	static final String PASS = "root123";
+
+	public DBMSProject() 
+	{
+		setTitle("G20 Event Management System");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(300, 200);
+		setLocationRelativeTo(null);
+
+		// Create hardcoded text area
+		JTextArea textArea = new JTextArea();
+		textArea.setText("Welcome to G20 Event Management System!");
+		textArea.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+
+
+		// Create custom JPanel to paint the image background and apply colors
+		JPanel backgroundPanel = new JPanel() {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				try {
+					Image image = ImageIO.read(new File("C:\\Users\\SIMRAN DESAI\\Pictures\\Saved Pictures\\image1.png")); // Replace with the actual image path
+					g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+
+		// Create dropdown with options
+		String[] options = 
+			{
+					"Exit the application",
+					// display details 
+					"Display details of the G20 Countries",		
+					"Display the trade relations between the Countries",		
+					"Display the economy details of each country",		
+					"Display the trade data specific to the countries",		
+					"Display the economy data specific to the countries",	
+					"Display the tax details in all the countries",		
+
+					// data manipulation queries
+					"Add a new country in the summit",		
+					"Add a new trade between the countries",
+					"Update the country details",		
+					//"Update trade details",	
+					//"Update economy details",		
+					//"Delete a country from the g20",		
+					//"Delete a trade between countries",		
+
+
+					// queries covering all other concepts that are taught in class
+					"Display top 5 G20 countries along with import and export value with highest export value.",
+					"Display the G20 countries with positive trade balance status along with their G20 themes and the location.",
+					"Display the economic status of G20 countries by displaying the GDP growth, tax rate and labour rate and sort according to GDP growth ",
+					"Relate population of G20 countries to their economic status by using GDP growth and sort according to GDP growth.",
+					"Display the G20 countries and show their trade relations by displaying their export value which is greater than 700",
+					"Relate the trade and G20 countries and represent trade relations and their partner countries along with tax on trade which indicates increase In probability of positive trade balance status.",
+					"select Country_Trade.Name , Trade.Tax_on_Trade from Trade inner join Country_Trade on Country_Trade.Country_code = Trade.Country_Code where Trade.Partner_nations = 'China'",
+					"What was the theme of g20 in 2016 and where it was held with a number of guest countries. And state whether the country is surplus or deficit.",
+					"What is the import and export rate of countries starting with the letter ‘ I ’?",
+					"Display the countries of g20 summit along with their gdp growth and tax rate and sort them in terms of gdp",
+					"Procedure to find out the number of nations a particular nation is a partner of.",
+					"Knowing the different types of trade that the various nations perform.",
+					"Displaying the countries in the descending order of the population.(descending order)",
+					"Knowing the number of countries with trade balance type (group by clause)",
+					"Displaying the maximum tax on trade.(max function)",
+					"Displaying the top 5 countries having the highest gdp growth(limit clause)",
+					"Display the Country Economy Relationship table",
+
+					// Virtualisation between the countries
+					"Map"
+			};
+
+
+		dropdown = new JComboBox<>(options);
+		dropdown.setBackground(new Color(255, 255, 255));
+		dropdown.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+		// Create button
+		executeBtn = new JButton("Execute");
+		executeBtn.addActionListener(this);
+		executeBtn.setBackground(new Color(20, 143, 119));
+		executeBtn.setForeground(new Color(255, 255, 255));
+		executeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+		executeBtn.addActionListener(this);
+
+		// Create panel
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		backgroundPanel.add(Box.createVerticalStrut(20));
+		backgroundPanel.add(textArea);
+		backgroundPanel.add(Box.createVerticalStrut(20));
+		// backgroundPanel.add(dropdown);
+		backgroundPanel.add(Box.createVerticalStrut(20));
+		// backgroundPanel.add(executeBtn);
+		panel.add(dropdown, BorderLayout.CENTER);
+		panel.add(executeBtn, BorderLayout.SOUTH);
+		panel.setSize(600, 400);
+
+		// Add panel to frame
+		setContentPane(backgroundPanel);
+		add(panel);
+		setVisible(true);
+	}
+
+
+
+	public void actionPerformed(ActionEvent e) 
+	{
+		if (e.getSource() == executeBtn) 
+		{
+			// Get selected option from the dropdown
+			String selectedOption = (String) dropdown.getSelectedItem();
+
+
+			// Perform action based on selected option using switch-case
+			switch (selectedOption) 
+			{
+			case "Exit the application":		// 0
+				System.exit(0);
+				break;
+
+			case "Display details of the G20 Countries":		// 1
+				executeOption1();
+				break;
+
+			case "Display the trade relations between the Countries":		// 2
+				// Implement functionality for Option 2
+				executeOption2();
+				break;
+
+			case "Display the economy details of each country":		// 3
+				executeOption3();
+				break;
+
+			case "Display the trade data specific to the countries":		// 4
+				executeOption4();
+				break;
+
+			case "Display the economy data specific to the countries":		// 5
+				executeOption5();
+				break;
+
+			case "Display the tax details in all the countries":		// 6
+				executeOption6();
+				break;
+
+			case "Add a new country in the summit":		// 7
+				executeOption7();
+				break;
+
+			case "Display top 5 G20 countries along with import and export value with highest export value.":		// 8
+				executeOption8();
+				break;
+
+			case "Display the G20 countries with positive trade balance status along with their G20 themes and the location.":		// 9
+				executeOption9();
+				break;
+
+			case "Display the economic status of G20 countries by displaying the GDP growth, tax rate and labour rate and sort according to GDP growth ":		// 10
+				executeOption10();
+				break;
+
+			case "Relate population of G20 countries to their economic status by using GDP growth and sort according to GDP growth.":		// 11
+				executeOption11();
+				break;
+
+			case "Display the G20 countries and show their trade relations by displaying their export value which is greater than 700":		// 12
+				executeOption12();
+				break;
+
+			case "Relate the trade and G20 countries and represent trade relations and their partner countries along with tax on trade which indicates increase In probability of positive trade balance status.":		// 13
+				executeOption13();
+				break;
+
+			case "select Country_Trade.Name , Trade.Tax_on_Trade from Trade inner join Country_Trade on Country_Trade.Country_code = Trade.Country_Code where Trade.Partner_nations = 'China' ":		// 14
+				executeOption14();
+				break;
+
+			case "What was the theme of g20 in 2016 and where it was held with a number of guest countries. And state whether the country is surplus or deficit.":		// 15
+				executeOption15();
+				break;
+
+			case "What is the import and export rate of countries starting with the letter ‘ I ’?":		// 16
+				executeOption16();
+				break;
+
+			case "Display the countries of g20 summit along with their gdp growth and tax rate and sort them in terms of gdp":		// 17
+				executeOption17();
+				break;
+
+			case "Procedure to find out the number of nations a particular nation is a partner of.":		// 18
+				executeOption18();
+				break;
+
+			case "Add a new trade between the countries":		// 19
+				executeOption19();
+				break;
+
+			case "Update the country details":		// 20
+				executeOption20();
+				break;
+
+			case "Update trade details":		// 21
+				//				executeOption21();
+				break;
+
+			case "Update economy details":		// 22
+				//				executeOption22();
+				break;
+
+			case "Delete a country from the g20":		// 23
+				//			executeOption23();
+				break;
+
+			case "Delete a trade between countries":		// 24
+				//			executeOption24();
+				break;
+
+			case "Knowing the different types of trade that the various nations perform.":		// 25
+				executeOption25();
+				break;
+
+			case "Displaying the countries in the descending order of the population.(descending order)":		// 26
+				executeOption26();
+				break;
+
+			case "Knowing the number of countries with trade balance type (group by clause)":		// 27
+				executeOption27();
+				break;
+
+			case "Displaying the maximum tax on trade.(max function)":		// 28
+				executeOption28();
+				break;
+
+			case "Displaying the top 5 countries having the highest gdp growth(limit clause)":		// 29
+				executeOption29();
+				break;
+
+			case "Map":
+				//			executeOption30();
+				break;
+
+			default :
+				System.out.println("Invalid Choice");
+				break;
+
+			}
+		}
+	}
+
+
+	// display the country table
+	private void executeOption1() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM Country";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private DefaultTableModel buildTableModel(ResultSet resultSet) throws SQLException {
+		ResultSetMetaData metaData = resultSet.getMetaData();
+
+		// Get column names
+		int columnCount = metaData.getColumnCount();
+		String[] columnNames = new String[columnCount];
+		for (int i = 1; i <= columnCount; i++) {
+			columnNames[i - 1] = metaData.getColumnName(i);
+		}
+
+		// Get row data
+		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+		while (resultSet.next()) {
+			Object[] rowData = new Object[columnCount];
+			for (int i = 1; i <= columnCount; i++) {
+				rowData[i - 1] = resultSet.getObject(i);
+			}
+			tableModel.addRow(rowData);
+		}
+
+		return tableModel;
+	}
+
+
+	// display the trade table
+	private void executeOption2() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM Trade";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+	// display the economy table
+	private void executeOption3() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM Economy";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+	// display the economy table
+	private void executeOption4() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM Country_trade";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+	// display the economy table
+	private void executeOption5() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM Country_economy";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+
+	// display the economy table
+	private void executeOption6() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "SELECT * FROM tax_gdp";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+	// Add a new country into the country table
+	private void executeOption7() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			// Create input fields for the user to enter data
+			JTextField nameField = new JTextField();
+			JTextField capitalField = new JTextField();
+			JTextField continentField = new JTextField();
+			JTextField leaderField = new JTextField();
+			JTextField populationField = new JTextField();
+			JTextField developmentStatusField = new JTextField();
+			JTextField joiningYearField = new JTextField();
+			JTextField hostYearField = new JTextField();
+			JTextField languageField = new JTextField();
+			JTextField g20ThemeField = new JTextField();
+			JTextField guestCountriesField = new JTextField();
+
+			// Create a panel to hold the input fields
+			JPanel panel = new JPanel(new GridLayout(11, 2));
+			panel.add(new JLabel("Name:"));
+			panel.add(nameField);
+			panel.add(new JLabel("Capital:"));
+			panel.add(capitalField);
+			panel.add(new JLabel("Continent:"));
+			panel.add(continentField);
+			panel.add(new JLabel("Host Leader:"));
+			panel.add(leaderField);
+			panel.add(new JLabel("Population in Crore:"));
+			panel.add(populationField);
+			panel.add(new JLabel("Development Status:"));
+			panel.add(developmentStatusField);
+			panel.add(new JLabel("Joining Year:"));
+			panel.add(joiningYearField);
+			panel.add(new JLabel("Host Year:"));
+			panel.add(hostYearField);
+			panel.add(new JLabel("Language:"));
+			panel.add(languageField);
+			panel.add(new JLabel("G20 Theme:"));
+			panel.add(g20ThemeField);
+			panel.add(new JLabel("Number of Guest Countries:"));
+			panel.add(guestCountriesField);
+
+			// Show input dialog to get user input
+			int result = JOptionPane.showConfirmDialog(null, panel, "Enter Country Details",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			// Check if the user clicked OK
+			if (result == JOptionPane.OK_OPTION) {
+				String query = "INSERT INTO Country(Name, Capital, Continent, Host_Leader, Population_in_Crore, Developing_Status, Joining_Year, Host_Year, Language, G20_Theme, No_of_Guest_Countries) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+				PreparedStatement pstmt = conn.prepareStatement(query);
+
+				// Set the query parameters using user input
+				pstmt.setString(1, nameField.getText());
+				pstmt.setString(2, capitalField.getText());
+				pstmt.setString(3, continentField.getText());
+				pstmt.setString(4, leaderField.getText());
+				pstmt.setInt(5, Integer.parseInt(populationField.getText()));
+				pstmt.setString(6, developmentStatusField.getText());
+				pstmt.setInt(7, Integer.parseInt(joiningYearField.getText()));
+				pstmt.setInt(8, Integer.parseInt(hostYearField.getText()));
+				pstmt.setString(9, languageField.getText());
+				pstmt.setString(10, g20ThemeField.getText());
+				pstmt.setInt(11, Integer.parseInt(guestCountriesField.getText()));
+
+				int rowsAffected = pstmt.executeUpdate();
+
+				if (rowsAffected > 0) {
+					JOptionPane.showMessageDialog(null, "Country added successfully!");
+				} else {
+					JOptionPane.showMessageDialog(null, "Failed to add the country!");
+				}
+
+				pstmt.close();
+			}
+
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	// display the economy table
+	private void executeOption8() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Trade.Name ,trade.Import_value ,trade.Export_value from Country_trade inner join trade on Country_trade.Country_code = trade.Country_code order by Export_value DESC limit 5";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	// display the economy table
+	private void executeOption9() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country.Name as Location_Name ,Country.G20_theme as Theme ,Country_trade.Trade_bal as TradeStatus from Country inner join Country_trade on Country.Name = Country_Trade.Name where Country_Trade.Trade_bal='surplus";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption10() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Economy.Name , Economy_GDP.GDP_GROWTH_inPercentage , Economy_GDP.TaxRate_inPercentage , Economy.LabourRate_inPERCENTAGE from ((Economy inner join Economy_GDP on Economy.TaxRate_inPercentage = Economy_GDP.TaxRate_inPercentage) inner join country_ECONOMY on Economy.Rank_ID = Country_Economy.Rank_ID) order by GDP_Growth_inPercentage";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption11() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Economy.Name as Country,Country.Population_in_Crore as Population, Economy_GDP.GDP_GROWTH_inPercentage from (((Economy inner join Economy_GDP on Economy.TaxRate_inPercentage = Economy_GDP.TaxRate_inPercentage) inner join country_ECONOMY on Economy.Rank_ID = Country_Economy.Rank_ID) inner join Country on Country.Name = Country_Economy.Name)order by GDP_Growth_inPercentage";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption12() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Trade.Name, Trade.Tax_on_Trade from Trade inner join Country_Trade on Country_Trade.Country_code = Trade.Country_Code where Trade.Export_Value > 700";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption13() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Trade.Name, Trade.Partner_nations, Trade.Max_Trade from Trade inner join Country_Trade on Country_Trade.Country_code = Trade.Country_Code where Trade.Tax_on_Trade > 15";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+	private void executeOption14() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Trade.Name , Trade.Tax_on_Trade from Trade inner join Country_Trade on Country_Trade.Country_code = Trade.Country_Code where Trade.Partner_nations = 'China' ";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+	private void executeOption15() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country.Name as Location_Name ,Country.G20_theme as THEME,Country.NO_Of_Guest_Countries ,Country_trade.Trade_bal as surplus_or_deficient  from Country inner join Country_trade on Country.Name = Country_Trade.Name where Country.Host_Year = 2016";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+	private void executeOption16() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Trade.Name ,trade.Import_value ,trade. Export_value from Country_trade inner join trade on Country_trade.Country_code = trade.Country_code where Country_Trade.Name like 'I%'";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption17() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Country_Economy.Name , Economy_GDP.GDP_GROWTH_inPercentage , Economy_GDP.TaxRate_inPercentage from ((Economy inner join Economy_GDP on Economy.TaxRate_inPercentage = Economy_GDP.TaxRate_inPercentage) inner join country_ECONOMY on Economy.Rank_ID = Country_Economy.Rank_ID) order by GDP_Growth_inPercentage";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption18() 
+	{
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "{call procedure_name(?)}"; // Replace procedure_name with the actual name of the stored procedure
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			pstmt.setString(1, "parameter_value"); // Set the parameter value if required
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	// add into the trade table
+	private void executeOption19() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			// Create input fields for the user to enter data
+			JTextField codeField = new JTextField();
+			JTextField importValueField = new JTextField();
+			JTextField exportValueField = new JTextField();
+			JTextField partnerNationField = new JTextField();
+			JTextField maxTradeField = new JTextField();
+			JTextField taxOnTradeField = new JTextField();
+			JTextField typesOfTradeField = new JTextField();
+
+			// Create a panel to hold the input fields
+			JPanel panel = new JPanel(new GridLayout(11, 2));
+			panel.add(new JLabel("Country Code:"));
+			panel.add(codeField);
+			panel.add(new JLabel("Import Value:"));
+			panel.add(importValueField);
+			panel.add(new JLabel("Export Value:"));
+			panel.add(exportValueField);
+			panel.add(new JLabel("Partner Nations:"));
+			panel.add(partnerNationField);
+			panel.add(new JLabel("Max Trade:"));
+			panel.add(maxTradeField);
+			panel.add(new JLabel("Tax on Trade:"));
+			panel.add(taxOnTradeField);
+			panel.add(new JLabel("Types of Trade:"));
+			panel.add(typesOfTradeField);
+
+			// Show input dialog to get user input
+			int result = JOptionPane.showConfirmDialog(null, panel, "Enter Country Details",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			// Check if the user clicked OK
+			if (result == JOptionPane.OK_OPTION) {
+				String query = "INSERT INTO Country(Name, Capital, Continent, Host_Leader, Population_in_Crore, Developing_Status, Joining_Year, Host_Year, Language, G20_Theme, No_of_Guest_Countries) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+				PreparedStatement pstmt = conn.prepareStatement(query);
+
+				// Set the query parameters using user input
+				pstmt.setString(1, codeField.getText());
+				pstmt.setInt(2, Integer.parseInt(importValueField.getText()));
+				pstmt.setInt(3, Integer.parseInt(exportValueField.getText()));
+				pstmt.setString(4, partnerNationField.getText());
+				pstmt.setString(5, maxTradeField.getText());
+				pstmt.setInt(6, Integer.parseInt(taxOnTradeField.getText()));
+				pstmt.setString(7, typesOfTradeField.getText());
+
+				int rowsAffected = pstmt.executeUpdate();
+
+				if (rowsAffected > 0) {
+					JOptionPane.showMessageDialog(null, "New Trade added successfully!");
+				} else {
+					JOptionPane.showMessageDialog(null, "Failed to add the trade!");
+				}
+
+				pstmt.close();
+			}
+
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+	private void executeOption20() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			// Create input fields for the user to enter data
+			JTextField capitalField = new JTextField();
+			JTextField populationField = new JTextField();
+
+			// Create a panel to hold the input fields
+			JPanel panel = new JPanel(new GridLayout(2, 2));
+			panel.add(new JLabel("Capital:"));
+			panel.add(capitalField);
+			panel.add(new JLabel("Population in Crore:"));
+			panel.add(populationField);
+
+			// Show input dialog to get user input
+			int result = JOptionPane.showConfirmDialog(null, panel, "Update Country Population",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			// Check if the user clicked OK
+			if (result == JOptionPane.OK_OPTION) {
+				String query = "UPDATE Country SET Population_in_Crore=? WHERE Capital=?";
+				PreparedStatement pstmt = conn.prepareStatement(query);
+
+				// Set the query parameters using user input
+				// Set the query parameters using user input
+				pstmt.setDouble(1, Double.parseDouble(populationField.getText()));
+				pstmt.setString(2, capitalField.getText());
+
+
+				int rowsAffected = pstmt.executeUpdate();
+
+				if (rowsAffected > 0) {
+					JOptionPane.showMessageDialog(null, "Population updated successfully!");
+				} else {
+					JOptionPane.showMessageDialog(null, "Failed to update the population!");
+				}
+
+				pstmt.close();
+			}
+
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+
+	private void executeOption25() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select distinct Types_of_Trade from Trade";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+
+	private void executeOption26() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select * from Country order by Population_in_Crore DESC";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+
+	private void executeOption27() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select Trade_bal,count(*) as Count from Country_Trade group by Trade_bal";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption29() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select * from Economy_GDP order by GDP_GROWTH_inPERCENTAGE DESC limit 5";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
+	private void executeOption28() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select max(Tax_on_Trade) as Max_tax_on_trade from Trade";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	// main class to define the 
+	public static void main(String[] args) 
+	{
+		SwingUtilities.invokeLater(() -> new LoginFrame());
+	}
+}
