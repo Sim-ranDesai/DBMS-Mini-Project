@@ -1,0 +1,3 @@
+/* Contains JDBC Connectivity */
+/* Also contains Java Swing as front end */
+/* Output of the queries being displayed on the GUI windows*/
