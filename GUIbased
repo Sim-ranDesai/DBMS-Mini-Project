@@ -1,11 +1,5 @@
-/* Contains JDBC Connectivity */
-/* Also contains Java Swing as front end */
-/* Output of the queries being displayed on the GUI windows*/
-
-
-
-
 package swing;
+
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,6 +10,7 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
@@ -42,7 +37,8 @@ class LoginFrame extends JFrame implements ActionListener
 	private JPasswordField passwordField;
 	private JButton loginButton;
 
-	public LoginFrame() {
+	public LoginFrame() 
+	{
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(300, 150);
@@ -144,10 +140,6 @@ public class DBMSProject extends JFrame implements ActionListener
 					"Add a new country in the summit",		
 					"Add a new trade between the countries",
 					"Update the country details",		
-					//"Update trade details",	
-					//"Update economy details",		
-					//"Delete a country from the g20",		
-					//"Delete a trade between countries",		
 
 
 					// queries covering all other concepts that are taught in class
@@ -168,8 +160,6 @@ public class DBMSProject extends JFrame implements ActionListener
 					"Displaying the maximum tax on trade.(max function)",
 					"Displaying the top 5 countries having the highest gdp growth(limit clause)",
 					"Display the Country Economy Relationship table",
-
-					// Virtualisation between the countries
 					"Map"
 			};
 
@@ -184,7 +174,7 @@ public class DBMSProject extends JFrame implements ActionListener
 		executeBtn.setBackground(new Color(20, 143, 119));
 		executeBtn.setForeground(new Color(255, 255, 255));
 		executeBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-		executeBtn.addActionListener(this);
+
 
 		// Create panel
 		JPanel panel = new JPanel();
@@ -192,9 +182,7 @@ public class DBMSProject extends JFrame implements ActionListener
 		backgroundPanel.add(Box.createVerticalStrut(20));
 		backgroundPanel.add(textArea);
 		backgroundPanel.add(Box.createVerticalStrut(20));
-		// backgroundPanel.add(dropdown);
 		backgroundPanel.add(Box.createVerticalStrut(20));
-		// backgroundPanel.add(executeBtn);
 		panel.add(dropdown, BorderLayout.CENTER);
 		panel.add(executeBtn, BorderLayout.SOUTH);
 		panel.setSize(600, 400);
@@ -227,7 +215,6 @@ public class DBMSProject extends JFrame implements ActionListener
 				break;
 
 			case "Display the trade relations between the Countries":		// 2
-				// Implement functionality for Option 2
 				executeOption2();
 				break;
 
@@ -340,21 +327,22 @@ public class DBMSProject extends JFrame implements ActionListener
 				break;
 
 			case "Map":
-				//			executeOption30();
+				executeOption30();
 				break;
 
 			default :
 				System.out.println("Invalid Choice");
 				break;
-
 			}
 		}
 	}
 
 
 	// display the country table
-	private void executeOption1() {
-		try {
+	private void executeOption1() 
+	{
+		try 
+		{
 			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
 			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
 			String USER = "user";
@@ -653,7 +641,7 @@ public class DBMSProject extends JFrame implements ActionListener
 				pstmt.setString(2, capitalField.getText());
 				pstmt.setString(3, continentField.getText());
 				pstmt.setString(4, leaderField.getText());
-				pstmt.setInt(5, Integer.parseInt(populationField.getText()));
+				pstmt.setFloat(5, Float.parseFloat(populationField.getText()));
 				pstmt.setString(6, developmentStatusField.getText());
 				pstmt.setInt(7, Integer.parseInt(joiningYearField.getText()));
 				pstmt.setInt(8, Integer.parseInt(hostYearField.getText()));
@@ -1282,6 +1270,39 @@ public class DBMSProject extends JFrame implements ActionListener
 		}
 	}
 
+	private void executeOption28() {
+		try {
+			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
+			String USER = "user";
+			String PASS = "root123";
+
+			Class.forName(JDBC_DRIVER);
+			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+			String query = "select max(Tax_on_Trade) as Max_tax_on_trade from Trade";
+			PreparedStatement pstmt = conn.prepareStatement(query);
+			ResultSet resultSet = pstmt.executeQuery();
+
+			DefaultTableModel tableModel = buildTableModel(resultSet);
+			JTable table = new JTable(tableModel);
+
+			JFrame resultFrame = new JFrame("Query Results");
+			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			resultFrame.setSize(600, 400);
+			resultFrame.setLocationRelativeTo(null);
+			resultFrame.add(new JScrollPane(table));
+			resultFrame.setVisible(true);
+
+			resultSet.close();
+			pstmt.close();
+			conn.close();
+		} catch (ClassNotFoundException | SQLException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+
 
 	private void executeOption29() {
 		try {
@@ -1316,37 +1337,30 @@ public class DBMSProject extends JFrame implements ActionListener
 	}
 
 
-	private void executeOption28() {
-		try {
-			String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-			String DB_URL = "jdbc:mysql://localhost:3306/dbms?useSSL=false";
-			String USER = "user";
-			String PASS = "root123";
+	private void executeOption30() {
+	    JFrame frame = new JFrame("Image Display");
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setSize(600, 400);
+	    frame.setLocationRelativeTo(null);
 
-			Class.forName(JDBC_DRIVER);
-			Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+	    try {
+	        // Load the image from the file path
+	        BufferedImage image = ImageIO.read(new File("C:/Users/SIMRAN DESAI/Pictures/Saved Pictures/Screenshots/image.png"));
 
-			String query = "select max(Tax_on_Trade) as Max_tax_on_trade from Trade";
-			PreparedStatement pstmt = conn.prepareStatement(query);
-			ResultSet resultSet = pstmt.executeQuery();
+	        // Create a JLabel to display the image
+	        JLabel imageLabel = new JLabel(new ImageIcon(image));
 
-			DefaultTableModel tableModel = buildTableModel(resultSet);
-			JTable table = new JTable(tableModel);
+	        // Set the label as the content pane of the frame
+	        frame.setContentPane(imageLabel);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
 
-			JFrame resultFrame = new JFrame("Query Results");
-			resultFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			resultFrame.setSize(600, 400);
-			resultFrame.setLocationRelativeTo(null);
-			resultFrame.add(new JScrollPane(table));
-			resultFrame.setVisible(true);
-
-			resultSet.close();
-			pstmt.close();
-			conn.close();
-		} catch (ClassNotFoundException | SQLException ex) {
-			ex.printStackTrace();
-		}
+	    frame.setVisible(true);
 	}
+
+
+
 
 	// main class to define the 
 	public static void main(String[] args) 
